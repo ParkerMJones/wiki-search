@@ -10,6 +10,7 @@ interface WikiArticle {
   extract: string;
   url: string;
   pageid: number;
+  fullContent?: string;
 }
 
 interface SearchResult {
@@ -45,6 +46,29 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+// Function to fetch full article content
+async function fetchFullArticle(pageId: number): Promise<string | null> {
+  try {
+    const response = await axios.get("https://en.wikipedia.org/w/api.php", {
+      params: {
+        action: "parse",
+        format: "json",
+        pageid: pageId,
+        prop: "text",
+        origin: "*",
+      },
+    });
+
+    if (response.data.parse && response.data.parse.text) {
+      return response.data.parse.text["*"];
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching full article:", error);
+    return null;
+  }
+}
+
 // Function to fetch Wikipedia data
 async function fetchWikiData(searchTerm: string): Promise<WikiData | null> {
   if (!searchTerm) return null;
@@ -62,16 +86,12 @@ async function fetchWikiData(searchTerm: string): Promise<WikiData | null> {
     });
 
     if (response.data.query && response.data.query.search.length > 0) {
-      // Get all search results
       const results = response.data.query.search as WikiSearchResult[];
-
-      // Get the first result's content by default
       const firstResult = results[0];
 
-      // Get the page content for the first result
-      const pageResponse = await axios.get(
-        "https://en.wikipedia.org/w/api.php",
-        {
+      // Get both the page info and full content
+      const [pageResponse, fullContent] = await Promise.all([
+        axios.get("https://en.wikipedia.org/w/api.php", {
           params: {
             action: "query",
             format: "json",
@@ -82,8 +102,9 @@ async function fetchWikiData(searchTerm: string): Promise<WikiData | null> {
             pageids: firstResult.pageid,
             origin: "*",
           },
-        }
-      );
+        }),
+        fetchFullArticle(firstResult.pageid),
+      ]);
 
       const pageId = firstResult.pageid;
       const page = pageResponse.data.query.pages[pageId];
@@ -94,6 +115,7 @@ async function fetchWikiData(searchTerm: string): Promise<WikiData | null> {
           extract: page.extract,
           url: page.fullurl,
           pageid: pageId,
+          fullContent: fullContent || undefined,
         },
         searchResults: results.map((result: WikiSearchResult) => ({
           title: result.title,
@@ -115,18 +137,21 @@ export async function fetchArticleById(
   pageId: number
 ): Promise<WikiArticle | null> {
   try {
-    const pageResponse = await axios.get("https://en.wikipedia.org/w/api.php", {
-      params: {
-        action: "query",
-        format: "json",
-        prop: "extracts|info|categories",
-        exintro: 1,
-        explaintext: 1,
-        inprop: "url",
-        pageids: pageId,
-        origin: "*",
-      },
-    });
+    const [pageResponse, fullContent] = await Promise.all([
+      axios.get("https://en.wikipedia.org/w/api.php", {
+        params: {
+          action: "query",
+          format: "json",
+          prop: "extracts|info|categories",
+          exintro: 1,
+          explaintext: 1,
+          inprop: "url",
+          pageids: pageId,
+          origin: "*",
+        },
+      }),
+      fetchFullArticle(pageId),
+    ]);
 
     const page = pageResponse.data.query.pages[pageId];
 
@@ -135,6 +160,7 @@ export async function fetchArticleById(
       extract: page.extract,
       url: page.fullurl,
       pageid: pageId,
+      fullContent: fullContent || undefined,
     };
   } catch (error) {
     console.error("Error fetching article by ID:", error);
@@ -206,6 +232,39 @@ export default function Index() {
     submit(formData, { method: "get" });
   };
 
+  // Function to process Wikipedia content
+  const processWikiContent = (content: string) => {
+    // Create a temporary div to parse the HTML
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = content;
+
+    // Remove unwanted elements
+    const unwantedSelectors = [
+      ".mw-editsection",
+      ".reference",
+      ".error",
+      "script",
+      "style",
+      ".mw-empty-elt",
+    ];
+
+    unwantedSelectors.forEach((selector) => {
+      tempDiv.querySelectorAll(selector).forEach((el) => el.remove());
+    });
+
+    // Fix internal Wikipedia links
+    tempDiv.querySelectorAll("a").forEach((link) => {
+      const href = link.getAttribute("href");
+      if (href?.startsWith("/wiki/")) {
+        link.setAttribute("href", `https://wikipedia.org${href}`);
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
+      }
+    });
+
+    return tempDiv.innerHTML;
+  };
+
   return (
     <div className="flex flex-col h-screen bg-wiki-bg text-black">
       {/* Wikipedia-like header */}
@@ -264,7 +323,18 @@ export default function Index() {
 
                   {/* Wikipedia-like article content */}
                   <div className="wiki-content font-wiki-sans text-base leading-relaxed">
-                    {formatExtract(wikiData.currentArticle.extract)}
+                    {wikiData.currentArticle.fullContent ? (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: processWikiContent(
+                            wikiData.currentArticle.fullContent
+                          ),
+                        }}
+                        className="wiki-full-content"
+                      />
+                    ) : (
+                      formatExtract(wikiData.currentArticle.extract)
+                    )}
 
                     <div className="mt-6 pt-4 border-t border-wiki-border">
                       <a
@@ -273,7 +343,7 @@ export default function Index() {
                         rel="noopener noreferrer"
                         className="text-wiki-link hover:underline"
                       >
-                        Read full article on Wikipedia
+                        View on Wikipedia
                       </a>
                     </div>
                   </div>

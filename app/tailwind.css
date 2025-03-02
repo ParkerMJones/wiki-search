@@ -24,6 +24,103 @@ body {
   @apply text-wiki-link hover:underline;
 }
 
+/* Full Wikipedia content styling */
+.wiki-full-content {
+  @apply text-base leading-relaxed;
+}
+
+.wiki-full-content h1,
+.wiki-full-content h2,
+.wiki-full-content h3,
+.wiki-full-content h4,
+.wiki-full-content h5,
+.wiki-full-content h6 {
+  @apply font-wiki border-b border-wiki-border pb-1 mb-3 mt-6;
+}
+
+.wiki-full-content h2 {
+  @apply text-2xl;
+}
+
+.wiki-full-content h3 {
+  @apply text-xl;
+}
+
+.wiki-full-content h4 {
+  @apply text-lg;
+}
+
+.wiki-full-content p {
+  @apply mb-4;
+}
+
+.wiki-full-content ul,
+.wiki-full-content ol {
+  @apply mb-4 pl-8;
+}
+
+.wiki-full-content ul {
+  @apply list-disc;
+}
+
+.wiki-full-content ol {
+  @apply list-decimal;
+}
+
+.wiki-full-content img {
+  @apply max-w-full h-auto my-4;
+}
+
+.wiki-full-content .thumb {
+  @apply bg-wiki-header border border-wiki-border p-2 my-4 inline-block;
+}
+
+.wiki-full-content .thumbcaption {
+  @apply text-sm text-gray-600 mt-2;
+}
+
+.wiki-full-content table {
+  @apply border-collapse my-4 w-full;
+}
+
+.wiki-full-content th,
+.wiki-full-content td {
+  @apply border border-wiki-border p-2;
+}
+
+.wiki-full-content th {
+  @apply bg-wiki-header font-semibold;
+}
+
+.wiki-full-content .infobox {
+  @apply float-right ml-4 mb-4 bg-wiki-header border border-wiki-border max-w-sm;
+}
+
+.wiki-full-content .infobox th,
+.wiki-full-content .infobox td {
+  @apply p-2 border border-wiki-border;
+}
+
+.wiki-full-content .infobox th {
+  @apply bg-wiki-header text-center font-semibold;
+}
+
+.wiki-full-content .infobox td {
+  @apply bg-white;
+}
+
+.wiki-full-content blockquote {
+  @apply pl-4 border-l-4 border-wiki-border italic my-4 text-gray-700;
+}
+
+.wiki-full-content sup {
+  @apply text-xs align-super;
+}
+
+.wiki-full-content .hatnote {
+  @apply text-sm text-gray-600 italic mb-4;
+}
+
 /* Wikipedia-like table styling */
 .wiki-table {
   @apply border border-wiki-border my-4 w-full;
