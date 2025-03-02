@@ -2,6 +2,8 @@
 
 A Remix application that allows users to search for random Wikipedia articles related to their query.
 
+https://wiki-search-theta-three.vercel.app/
+
 ## Features
 
 - Simple and intuitive user interface
