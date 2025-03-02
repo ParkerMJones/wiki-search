@@ -4,9 +4,35 @@
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-wiki-bg text-black;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+/* Wikipedia-like styling */
+.wiki-article {
+  @apply font-wiki-sans;
+}
+
+.wiki-article h1 {
+  @apply font-wiki text-3xl mb-4;
+}
+
+.wiki-article p {
+  @apply mb-4 leading-relaxed;
+}
+
+.wiki-article a {
+  @apply text-wiki-link hover:underline;
+}
+
+/* Wikipedia-like table styling */
+.wiki-table {
+  @apply border border-wiki-border my-4 w-full;
+}
+
+.wiki-table th {
+  @apply bg-wiki-header border border-wiki-border p-2 font-semibold;
+}
+
+.wiki-table td {
+  @apply border border-wiki-border p-2;
 }
